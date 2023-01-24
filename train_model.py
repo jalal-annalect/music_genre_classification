@@ -175,6 +175,6 @@ model_info['optimizer'] = args.optimizer.lower()
 model_info['notes'] = str(notes).replace("_", " ")
 
 # saving loss results
-with open(f"experiment_id_{id}/model_info.json", 'w', encoding='utf-8') as outfile:
+with open(f"results/experiment_id_{id}/model_info.json", 'w', encoding='utf-8') as outfile:
     json.dump(model_info, outfile)
 print('Model training is complete.')
