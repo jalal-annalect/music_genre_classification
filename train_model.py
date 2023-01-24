@@ -21,7 +21,7 @@ np.random.seed(42)
 parser = argparse.ArgumentParser()
 parser.add_argument("-root_dir", "--root_dir", help = "Directory where images", type=str, required=True)
 parser.add_argument("-epochs", "--epochs", help = "Number of epochs", type=int, default=25)
-parser.add_argument("-batch_size", "--batch", help = "Batch size", type=int, default=32)
+parser.add_argument("-batch_size", "--batch_size", help = "Batch size", type=int, default=32)
 parser.add_argument("-learning_rate", "--learning_rate", help = "Learning rate", default=0.01, type=float)
 parser.add_argument("-optimizer", "--optimizer", help = "Optimizer", default="sgd", type=str)
 parser.add_argument("-steps_per_epoch", "--steps_per_epoch", help = "Steps per epoch", default=50, type=int)
@@ -78,7 +78,7 @@ for i, train_file in enumerate(train_files):
         y_train.append(label_map[label])
 
 # to np array
-X_train, y_train = np.array(X_train), np.array(y_train).reshape(-1, 1)
+X_train, y_train = np.array(X_train), tf.keras.utils.to_categorical(y_train, num_classes=9)
 
 # build val dataset
 X_val, y_val = [], []
@@ -94,7 +94,7 @@ for i, val_file in enumerate(val_files):
         y_val.append(label_map[label])
 
 # to np array
-X_val, y_val = np.array(X_val), np.array(y_val).reshape(-1, 1)
+X_val, y_val = np.array(X_val), tf.keras.utils.to_categorical(y_val, num_classes=9)
 
 # train data
 train_data = (tf.data.Dataset.from_tensor_slices((X_train, y_train))
@@ -117,7 +117,7 @@ utils.save_model_summary(model=model, filename=f"results/experiment_id_{id}/netw
 # compiling model
 # metrics to monitor
 metrics = [tf.keras.metrics.SparseCategoricalAccuracy()]
-model.compile(loss="sparse_categorical_crossentropy", optimizer=optimizer, metrics=metrics)
+model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=metrics)
 
 print('Setting up callbacks ...')
 # setting up callbacks
@@ -132,7 +132,7 @@ callbacks_list = [
     tf.keras.callbacks.EarlyStopping(
     monitor="val_loss",
     min_delta=1e-3,
-    patience=15,
+    patience=20,
     verbose=1,
     mode="auto")]
 
