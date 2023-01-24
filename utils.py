@@ -155,18 +155,9 @@ def get_melspectrogram(root_dir, filename, out_dir):
     plt.savefig(f"{out_dir}/{filename[:-4]}.jpg", bbox_inches='tight', pad_inches=0)
 
 # get mel spectrograms batches
-def get_batch_spectrogram(input_dir, output_dir, range=None):
-
-    files = os.listdir(input_dir)
-    
-    if range:
-        start, end = range[0], range[1]
-        files = files[start:end]
-    else:
-        pass
+def get_batch_spectrogram(input_dir, files, output_dir):
 
     pbar = tqdm.tqdm(total=len(files))
-
     for file in files:
         get_melspectrogram(input_dir, filename=file, out_dir=output_dir)
         pbar.update(1)
