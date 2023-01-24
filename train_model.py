@@ -68,6 +68,7 @@ X_train, y_train = [], []
 
 for i, train_file in enumerate(train_files):
     image = cv2.imread(f"{root_dir}/train/{train_file}")
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     label = train_file.split("_")[-1].split(".")[0]
 
     # remove jazz
@@ -84,6 +85,7 @@ X_train, y_train = np.array(X_train), np.array(y_train)
 X_val, y_val = [], []
 for i, val_file in enumerate(val_files):
     image = cv2.imread(f"{root_dir}/val/{val_file}")
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     label = val_file.split("_")[-1].split(".")[0]
 
     # remove jazz
