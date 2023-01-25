@@ -160,7 +160,7 @@ def chunk_audio(filename, output_dir, window=3):
         samples_wrote += buffer
 
 # get mel spectrograms
-def get_melspectrogram(root_dir, filename, out_dir):
+def get_melspectrogram(root_dir, filename, out_dir, padding=False):
     audio_path = os.path.join(root_dir, filename)
     # Loading demo track
     y, sr = librosa.load(audio_path)
@@ -168,14 +168,23 @@ def get_melspectrogram(root_dir, filename, out_dir):
     mels = librosa.feature.melspectrogram(y=y, sr=sr)
     mels_dB = librosa.power_to_db(mels, ref=np.max)
     image = librosa.display.specshow(mels_dB)
-    plt.savefig(f"{out_dir}/{filename[:-4]}.jpg")
+
+    if not padding:
+        plt.gca().set_axis_off()
+        plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
+        plt.margins(0,0)
+        plt.gca().xaxis.set_major_locator(plt.NullLocator())
+        plt.gca().yaxis.set_major_locator(plt.NullLocator())
+        plt.savefig("filename.pdf", bbox_inches = 'tight',pad_inches = 0)
+    else:
+        plt.savefig(f"{out_dir}/{filename[:-4]}.jpg")
 
 # get mel spectrograms batches
-def get_batch_spectrogram(input_dir, files, output_dir):
+def get_batch_spectrogram(input_dir, files, output_dir, padding=False):
 
     pbar = tqdm.tqdm(total=len(files))
     for file in files:
-        get_melspectrogram(input_dir, filename=file, out_dir=output_dir)
+        get_melspectrogram(input_dir, filename=file, out_dir=output_dir, padding=padding)
         pbar.update(1)
     pbar.close()
 
