@@ -60,7 +60,7 @@ for _ in range(100):
     random.shuffle(val_files)
 
 # encoding data
-labels = "blues classical country disco hiphop metal pop reggae rock".split()
+labels = "blues classical country disco hiphop metal pop jazz reggae rock".split()
 label_map = {elem:i for i, elem in enumerate(labels)}
 
 # build train dataset
@@ -70,13 +70,8 @@ for i, train_file in enumerate(train_files):
     image = cv2.imread(f"{root_dir}/train/{train_file}")
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     label = train_file.split("_")[-1].split(".")[0]
-
-    # remove jazz
-    if label=="jazz":
-        continue
-    else:
-        X_train.append(image)
-        y_train.append(label_map[label])
+    X_train.append(image)
+    y_train.append(label_map[label])
 
 # to np array
 X_train, y_train = np.array(X_train), np.array(y_train)
@@ -88,12 +83,8 @@ for i, val_file in enumerate(val_files):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     label = val_file.split("_")[-1].split(".")[0]
 
-    # remove jazz
-    if label=="jazz":
-        continue
-    else:
-        X_val.append(image)
-        y_val.append(label_map[label])
+    X_val.append(image)
+    y_val.append(label_map[label])
 
 # to np array
 X_val, y_val = np.array(X_val), np.array(y_val).reshape(-1, 1)
