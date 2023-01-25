@@ -15,13 +15,16 @@ warnings.filterwarnings("ignore")
 parser = argparse.ArgumentParser()
 parser.add_argument("-root_dir", "--root_dir", help = "Directory to read data from", required=True, type=str)
 parser.add_argument("-out_dir", "--out_dir", help = "Directory to output split data", required=True, type=str)
-parser.add_argument("-split", "--split", help = "Training split", type=float, default=0.8)
+parser.add_argument("-train_split", "--train_split", help = "Training split", type=float, default=0.8)
+parser.add_argument("-test_split", "--test_split", help = "Test split", type=float, default=0.1)
+
 args = parser.parse_args()
 
 # parcing cml arguments
 root_dir = args.root_dir
 out_dir = args.out_dir
-split = args.split
+train_split = args.train_split
+test_split = args.test_split
 
 print("Checking for corrupted files...")
 # ** remove corrupted files
@@ -46,6 +49,7 @@ else:
 # train and val split
 os.mkdir(f"{out_dir}/train")
 os.mkdir(f"{out_dir}/val")
+os.mkdir(f"{out_dir}/test")
 
 print("Splitting data...")
 
@@ -59,16 +63,26 @@ for elem in os.listdir(root_dir):
         print(f"found: {len(files)} files in category {elem}")
 
         # shuffle files
-        random.shuffle(files)
-        random.shuffle(files)
+        for _ in range(50):
+            random.shuffle(files)
 
         # splitting
-        n = round(len(files)*split)
-        train_files = files[:n]
-        val_files = files[n:]
+        n_train = round(len(files)*train_split)
+        train_files = files[:n_train]
+        rest_files = files[n_train:]
+
+        n_test = round(len(rest_files)*test_split)
+
+        val_files = rest_files[:n_test]
+        test_files = rest_files[n_test:]
+
+        try:
+            assert not bool(set(train_files).intersection(val_files).intersection(test_files))
+        except:
+            raise Exception("found overlap in train val test files.")
 
         # add train and val numbers per category
-        data_info[elem] = {"train":len(train_files), "val":len(val_files)}
+        data_info[elem] = {"train":len(train_files), "val":len(val_files), "test":len(test_files)}
 
         # copying train files
         for train_file in train_files:
@@ -83,6 +97,13 @@ for elem in os.listdir(root_dir):
                 shutil.copy(f"{dir}/{val_file}", f"{out_dir}/val/{val_file}")
             else:
                 raise Exception(f"""{dir}/{val_file} not found""")
+        
+        # copying test files
+        for test_file in test_files:
+            if os.path.isfile(f"{dir}/{test_file}"):
+                shutil.copy(f"{dir}/{test_file}", f"{out_dir}/test/{test_file}")
+            else:
+                raise Exception(f"""{dir}/{test_file} not found""")
     else:
         pass
     
@@ -93,7 +114,8 @@ total = total_train+total_val
 data_info["total train"] = total_train
 data_info["total val"] = total_val
 data_info["total"] = total
-data_info["train split"] = split
+data_info["train split"] = train_split
+data_info["test split"] = test_split
 
 print("Saving data stats...")
 # save data info

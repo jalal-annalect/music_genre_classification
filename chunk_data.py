@@ -22,6 +22,8 @@ window = args.window
 # read from dir
 train_root_dir = f"{root_dir}/train"
 val_root_dir = f"{root_dir}/val"
+test_root_dir = f"{root_dir}/test"
+
 
 # create output dirs
 if os.path.isdir(out_dir):
@@ -32,14 +34,22 @@ else:
 # train and val split
 os.mkdir(f"{out_dir}/train")
 os.mkdir(f"{out_dir}/val")
+os.mkdir(f"{out_dir}/test")
 
 # output dirs
 out_train_root_dir = f"{out_dir}/train"
 out_val_root_dir = f"{out_dir}/val"
+out_test_root_dir = f"{out_dir}/test"
 
 # make sure to only take audio files
 train_files = [elem for elem in os.listdir(train_root_dir) if elem.endswith(".wav")]
 val_files = [elem for elem in os.listdir(val_root_dir) if elem.endswith(".wav")]
+test_files = [elem for elem in os.listdir(test_root_dir) if elem.endswith(".wav")]
+
+try:
+    assert not bool(set(train_files).intersection(val_files).intersection(test_files))
+except:
+    raise Exception("found overlap in train val test files.")
 
 # splitting training data
 pbar = tqdm.tqdm(total=len(train_files))
@@ -57,23 +67,38 @@ for elem in val_files:
     pbar.update(1)
 pbar.close()
 
+# splitting test data
+pbar = tqdm.tqdm(total=len(test_files))
+for elem in test_files:
+    audio_path = os.path.join(test_root_dir, elem)
+    chunk_audio(filename=audio_path, output_dir=out_test_root_dir, window=window)
+    pbar.update(1)
+pbar.close()
+
 # getting data stats
 data_info = {}
 train_files = os.listdir(out_train_root_dir)
 val_files = os.listdir(out_val_root_dir)
+test_files = os.listdir(out_test_root_dir)
+
+# labels
 train_files_labels = dict(Counter([elem.split("_")[-1].split(".")[0] for elem in train_files]))
 val_files_labels = dict(Counter([elem.split("_")[-1].split(".")[0] for elem in val_files]))
-all_labels = list(set([elem.split("_")[-1].split(".")[0] for elem in train_files+val_files]))
+test_files_labels = dict(Counter([elem.split("_")[-1].split(".")[0] for elem in test_files]))
+
+all_labels = list(set([elem.split("_")[-1].split(".")[0] for elem in train_files+val_files+test_files]))
 
 for elem in all_labels:
-    data_info[elem] = {"train":train_files_labels[elem], "val":val_files_labels[elem]}
+    data_info[elem] = {"train":train_files_labels[elem], "val":val_files_labels[elem], "test":test_files_labels[elem]}
 
 total_train = len(train_files)
 total_val = len(val_files)
-total = total_train+total_val
+total_test = len(test_files)
+total = total_train+total_val+total_test
 
 data_info["total train"] = total_train
 data_info["total val"] = total_val
+data_info["total test"] = total_test
 data_info["total"] = total
 data_info["window"] = window
 
