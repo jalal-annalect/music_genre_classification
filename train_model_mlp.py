@@ -100,9 +100,9 @@ if args.standarize:
 else:
     pass
 
-steps_per_epoch = len(X_train)//batch_size
+steps_per_epoch = len(X_train)//batch_size-1
 
-validation_steps = len(X_val)//batch_size
+validation_steps = len(X_val)//batch_size-1
 
 # train data
 train_data = (tf.data.Dataset.from_tensor_slices((X_train, y_train))
@@ -148,8 +148,8 @@ callbacks_list = [
 start = datetime.datetime.now()
 # training
 history = model.fit(
-    train_data.repeat(),
-    validation_data=val_data.repeat(),
+    train_data.repeat(2),
+    validation_data=val_data.repeat(2),
     epochs=epochs,
     callbacks=callbacks_list,
     steps_per_epoch=steps_per_epoch,
