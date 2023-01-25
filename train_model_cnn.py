@@ -102,7 +102,7 @@ val_data = (tf.data.Dataset.from_tensor_slices((X_val, y_val))
             .prefetch(tf.data.AUTOTUNE))
 
 # create model
-model = utils.build_model_cnn(classes=9)
+model = utils.build_model_cnn(classes=10)
 
 # save model network summary
 utils.save_model_summary(model=model, filename=f"results/experiment_id_{id}/network.txt")
