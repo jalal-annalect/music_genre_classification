@@ -136,13 +136,7 @@ callbacks_list = [
     save_best_only=True,
     save_weights_only=True,
     verbose=1,
-    ), 
-    tf.keras.callbacks.EarlyStopping(
-    monitor="val_loss",
-    min_delta=1e-3,
-    patience=30,
-    verbose=1,
-    mode="auto")]
+    )]
 
 # train start time
 start = datetime.datetime.now()
