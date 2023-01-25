@@ -83,7 +83,7 @@ def get_batch_features(root_dir, files, out_dir):
     pbar.update(1)
 
 # make model
-def build_model(input_shape=(None, None, 3), classes=10):
+def build_model_cnn(input_shape=(None, None, 3), classes=10):
   X_input = tf.keras.layers.Input(input_shape)
   X = tf.keras.layers.Resizing(288, 432)(X_input)
   X = tf.keras.layers.Rescaling(1.0/255)(X)
@@ -196,3 +196,18 @@ def get_optimizer(optimizer, learning_rate):
     
     else:
         raise Exception(f"Not supporting optimizer: {optimizer} at the moment.")
+
+def build_model_mlp(num_classes=10):
+    model = tf.keras.models.Sequential([
+
+    tf.keras.layers.Dense(512, activation="relu", input_shape=(57,)),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(256, activation="relu"),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(128, activation="relu"),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(64, activation="relu"),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(num_classes, activation="softmax")])
+
+    return model

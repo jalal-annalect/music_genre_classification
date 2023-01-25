@@ -26,7 +26,9 @@ parser.add_argument("-learning_rate", "--learning_rate", help = "Learning rate",
 parser.add_argument("-optimizer", "--optimizer", help = "Optimizer", default="sgd", type=str)
 parser.add_argument("-steps_per_epoch", "--steps_per_epoch", help = "Steps per epoch", default=50, type=int)
 parser.add_argument("-validation_steps", "--validation_steps", help = "Validation per epoch", default=25, type=int)
+parser.add_argument("-standarize", "--standarize", help="Standarize data", default=True, type=bool)
 parser.add_argument("-notes", "--notes", help="Model training notes", default=None,type=str)
+
 args = parser.parse_args()
 
 # making output dirs
@@ -53,50 +55,50 @@ notes = str(args.notes)
 train_files = os.listdir(f"{root_dir}/train")
 val_files = os.listdir(f"{root_dir}/val")
 
-
+print("Shuffling data...")
 # shuffeling data
 for _ in range(100):
     random.shuffle(train_files)
     random.shuffle(val_files)
 
 # encoding data
-labels = "blues classical country disco hiphop metal pop reggae rock".split()
+labels = "blues classical country disco hiphop metal pop jazz reggae rock".split()
 label_map = {elem:i for i, elem in enumerate(labels)}
 
+print("Loading training data...")
 # build train dataset
 X_train, y_train = [], []
 
 for i, train_file in enumerate(train_files):
-    image = cv2.imread(f"{root_dir}/train/{train_file}")
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    with open(f"{root_dir}/train/{train_file}", 'rb') as f:
+        a = np.load(f)
     label = train_file.split("_")[-1].split(".")[0]
-
-    # remove jazz
-    if label=="jazz":
-        continue
-    else:
-        X_train.append(image)
-        y_train.append(label_map[label])
+    X_train.append(a)
+    y_train.append(label_map[label])
 
 # to np array
 X_train, y_train = np.array(X_train), np.array(y_train)
 
+print("Loading validation data...")
 # build val dataset
 X_val, y_val = [], []
 for i, val_file in enumerate(val_files):
-    image = cv2.imread(f"{root_dir}/val/{val_file}")
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    with open(f"{root_dir}/val/{val_file}", 'rb') as f:
+        a = np.load(f)
     label = val_file.split("_")[-1].split(".")[0]
-
-    # remove jazz
-    if label=="jazz":
-        continue
-    else:
-        X_val.append(image)
-        y_val.append(label_map[label])
+    X_val.append(a)
+    y_val.append(label_map[label])
 
 # to np array
 X_val, y_val = np.array(X_val), np.array(y_val).reshape(-1, 1)
+
+# standarizing data
+if args.standarize:
+    print("Standarizing data...")
+    X_train, X_mean, X_std = utils.standarize(np.array(X_train))
+    X_val = (np.array(X_val)-X_mean)/X_std
+else:
+    pass
 
 # train data
 train_data = (tf.data.Dataset.from_tensor_slices((X_train, y_train))
@@ -111,7 +113,7 @@ val_data = (tf.data.Dataset.from_tensor_slices((X_val, y_val))
             .prefetch(tf.data.AUTOTUNE))
 
 # create model
-model = utils.build_model(classes=9)
+model = utils.build_model_mlp()
 
 # save model network summary
 utils.save_model_summary(model=model, filename=f"results/experiment_id_{id}/network.txt")
@@ -142,8 +144,8 @@ callbacks_list = [
 start = datetime.datetime.now()
 # training
 history = model.fit(
-    train_data.repeat(),
-    validation_data=val_data.repeat(),
+    train_data.repeat(2),
+    validation_data=val_data.repeat(2),
     epochs=epochs,
     callbacks=callbacks_list,
     steps_per_epoch=steps_per_epoch,
