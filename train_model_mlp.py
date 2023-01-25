@@ -140,7 +140,7 @@ callbacks_list = [
     tf.keras.callbacks.EarlyStopping(
     monitor="val_loss",
     min_delta=1e-3,
-    patience=15,
+    patience=30,
     verbose=1,
     mode="auto")]
 
@@ -148,12 +148,12 @@ callbacks_list = [
 start = datetime.datetime.now()
 # training
 history = model.fit(
-    train_data.repeat(2),
-    validation_data=val_data.repeat(2),
+    train_data,
+    validation_data=val_data,
     epochs=epochs,
     callbacks=callbacks_list,
-    steps_per_epoch=steps_per_epoch,
-    validation_steps=validation_steps,
+    # steps_per_epoch=steps_per_epoch,
+    # validation_steps=validation_steps,
     verbose=1
     )
 # train end time 
