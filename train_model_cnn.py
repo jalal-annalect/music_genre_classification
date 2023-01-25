@@ -127,8 +127,8 @@ callbacks_list = [
 start = datetime.datetime.now()
 # training
 history = model.fit(
-    train_data.repeat(2),
-    validation_data=val_data.repeat(2),
+    train_data,
+    validation_data=val_data,
     epochs=epochs,
     callbacks=callbacks_list,
     # steps_per_epoch=steps_per_epoch,
