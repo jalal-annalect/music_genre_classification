@@ -24,8 +24,8 @@ parser.add_argument("-epochs", "--epochs", help = "Number of epochs", type=int, 
 parser.add_argument("-batch_size", "--batch_size", help = "Batch size", type=int, default=32)
 parser.add_argument("-learning_rate", "--learning_rate", help = "Learning rate", default=0.01, type=float)
 parser.add_argument("-optimizer", "--optimizer", help = "Optimizer", default="sgd", type=str)
-parser.add_argument("-steps_per_epoch", "--steps_per_epoch", help = "Steps per epoch", default=50, type=int)
-parser.add_argument("-validation_steps", "--validation_steps", help = "Validation per epoch", default=25, type=int)
+# parser.add_argument("-steps_per_epoch", "--steps_per_epoch", help = "Steps per epoch", default=50, type=int)
+# parser.add_argument("-validation_steps", "--validation_steps", help = "Validation per epoch", default=25, type=int)
 parser.add_argument("-standarize", "--standarize", help="Standarize data", default=True, type=bool)
 parser.add_argument("-notes", "--notes", help="Model training notes", default=None,type=str)
 
@@ -47,8 +47,8 @@ optimizer = args.optimizer
 
 # get optimizer
 optimizer = utils.get_optimizer(optimizer=optimizer, learning_rate=learning_rate)
-steps_per_epoch = args.steps_per_epoch
-validation_steps = args.validation_steps
+# steps_per_epoch = args.steps_per_epoch
+# validation_steps = args.validation_steps
 notes = str(args.notes)
 
 # get train and val files
@@ -99,6 +99,10 @@ if args.standarize:
     X_val = (np.array(X_val)-X_mean)/X_std
 else:
     pass
+
+steps_per_epoch = len(X_train)//batch_size
+
+validation_steps = len(X_val)//batch_size
 
 # train data
 train_data = (tf.data.Dataset.from_tensor_slices((X_train, y_train))
