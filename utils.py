@@ -19,13 +19,18 @@ def standarize(matrix):
     return (matrix-matrix.mean(axis=0))/matrix.std(axis=0), matrix.mean(axis=0), matrix.std(axis=0)
 
 # extract features from sound wave
-def extract_features(sound_wave):
+def extract_features(root_dir, filename, out_dir):
+    audio_path = f"{root_dir}/{filename}"
+    sound_wave, sr = librosa.load(audio_path)
     #mfcc
     mfcc = librosa.feature.mfcc(sound_wave)
     mfcc_mean, mfcc_var = mfcc.mean(axis=1), mfcc.var(axis=1)
 
     # combining features 
     mfcc_features = np.concatenate((mfcc_mean, mfcc_var))
+
+    # tempo
+    tempo = librosa.beat.tempo(sound_wave)
 
     # rms
     rms = librosa.feature.rms(sound_wave)
@@ -46,20 +51,36 @@ def extract_features(sound_wave):
 
     # chroma spectogram
     chroma_stft = librosa.feature.chroma_stft(sound_wave)
-    chroma_stft_mean, chroma_stft_var = chroma_stft.mean(axis=1), chroma_stft.var(axis=1)
-
-    # chroma features
-    chroma_stft_features = np.concatenate((chroma_stft_mean, chroma_stft_var))
+    chroma_stft_mean, chroma_stft_var = chroma_stft.mean(), chroma_stft.var()
 
     # derivative of sound wave
     zero_crossing_rate = librosa.feature.zero_crossing_rate(sound_wave)
     zero_crossing_rate_mean, zero_crossing_rate_var = zero_crossing_rate.mean(axis=1), zero_crossing_rate.var(axis=1)
 
-    return np.concatenate((mfcc_features, rms_mean, rms_var, 
+    # harmonic effects
+    harmonic_mean, harmonic_var = librosa.effects.harmonic(sound_wave).mean(), librosa.effects.harmonic(sound_wave).var()
+
+    # percussive
+    percussive_mean, percussive_var = librosa.effects.percussive(sound_wave).mean(), librosa.effects.percussive(sound_wave).var()
+
+    features = np.concatenate((chroma_stft_mean.reshape(-1), chroma_stft_var.reshape(-1), rms_mean, rms_var, 
                            spectral_centroid_mean, spectral_centroid_var,
                            spectral_bandwidth_mean, spectral_bandwidth_var, 
                            spectral_rolloff_mean, spectral_rolloff_var,
-                           chroma_stft_features, zero_crossing_rate_mean, zero_crossing_rate_var))
+                           harmonic_mean.reshape(-1), harmonic_var.reshape(-1),
+                           mfcc_features, tempo, percussive_mean.reshape(-1), percussive_var.reshape(-1),
+                           zero_crossing_rate_mean, zero_crossing_rate_var))
+
+    with open(f"{out_dir}/{filename[:-4]}.npz", 'wb') as outfile:
+        np.save(outfile, features)
+
+# process batch features
+def get_batch_features(root_dir, files, out_dir):
+    pbar = tqdm.tqdm(total=len(files))
+    for file in files:
+        extract_features(root_dir=root_dir, filename=file, out_dir=out_dir)
+        pbar.update(1)
+    pbar.update(1)
 
 # make model
 def build_model(input_shape=(None, None, 3), classes=10):
