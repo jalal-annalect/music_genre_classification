@@ -175,7 +175,7 @@ def get_melspectrogram(root_dir, filename, out_dir, padding=False):
         plt.margins(0,0)
         plt.gca().xaxis.set_major_locator(plt.NullLocator())
         plt.gca().yaxis.set_major_locator(plt.NullLocator())
-        plt.savefig("filename.pdf", bbox_inches = 'tight',pad_inches = 0)
+        plt.savefig(f"{out_dir}/{filename[:-4]}.jpg")
     else:
         plt.savefig(f"{out_dir}/{filename[:-4]}.jpg")
 
