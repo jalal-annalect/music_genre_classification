@@ -3,6 +3,7 @@ import librosa
 import librosa.display
 import soundfile as sf
 import matplotlib.pyplot as plt
+import requests
 import tqdm
 import os
 import numpy as np
@@ -220,3 +221,61 @@ def build_model_mlp(num_classes=10):
     tf.keras.layers.Dense(num_classes, activation="softmax")])
 
     return model
+
+class LALALConnector:
+    # intilize class
+    def __init__(self, filepath):
+        "DOCSTRING"
+        self.filepath = filepath
+        self.content = open(self.filepath, 'rb').read()
+        self.license = "d5a093854bfb415f"
+        self.filename = os.path.basename(filepath).split('/')[-1]
+        self.id = None
+
+    def upload(self):
+        request = requests.post(url="https://www.lalal.ai/api/upload/", data=self.content, 
+        headers={"Content-Disposition": f"attachment; filename={self.filename}", "Authorization": f"license {self.license}"})
+
+        if request.status_code==200:
+            data = request.json()
+            self.id = data['id']
+            print("Data uploaded successfully.")
+        else:
+            error_message = request.json()["error"]
+            raise Exception(f"An error occured while uploading the data. Traceback: {error_message}.")
+    
+    def split(self, filter=2, stem="vocals"):
+        headers = {"Authorization": f"license {self.license}"}
+        params = {"id": self.id, "filter": filter, "stem": stem}
+        request = requests.post(url="https://www.lalal.ai/api/split/", headers=headers, data=params)
+
+        if request.status_code==200:
+            print("Data split was successful")
+        else:
+            error_message = request.json()["error"]
+            raise Exception(f"An error occured while splitting the data. Traceback: {error_message}.")
+
+    def check(self):
+        headers = {"Authorization": f"license {self.license}"}
+        params = {"id": self.id}
+        request = requests.post(url="https://www.lalal.ai/api/check/", headers=headers, data=params)
+
+        if request.status_code==200:
+            split = request.json()
+            print("Waiting for response...")
+            # wait until stemming is complete
+            while not bool(split['result'][self.id]['split']):
+                request = requests.post(url="https://www.lalal.ai/api/check/", headers=headers, data=params)
+                split = request.json()
+            
+            # get results
+            vocals = split['result'][self.id]['split']['stem_track']
+            instrumental = split['result'][self.id]['split']['back_track']
+            print("Data check was successful.")
+            return {"vocal":vocals, "instrumental":instrumental}
+        else:
+            error_message = request.json()["error"]
+            raise Exception(f"An error occured while checking the data. Traceback: {error_message}.")            
+
+        
+            
